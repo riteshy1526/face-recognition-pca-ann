@@ -1,0 +1,7 @@
+Total Images: 114
+Persons: 4
+PCA Components (K): 70
+Training Samples: 68
+Testing Samples: 46
+Classifier: ANN (MLPClassifier)
+Accuracy: 39.13%
