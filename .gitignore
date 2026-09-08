@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.py[cod]
+mean_face.jpg
+accuracy_vs_k.png
+.env
+.DS_Store

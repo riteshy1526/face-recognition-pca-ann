@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live Face Recognition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
+</head>
+<body class="app-shell">
+
+  <header class="topbar">
+    <div class="brand-lockup">
+      <span class="brand-mark">FR</span>
+      <div>
+        <p class="eyebrow">Vision console / 01</p>
+        <h1>Live Face Recognition</h1>
+      </div>
+    </div>
+    <div class="status"><span class="status-dot"></span><span>CAMERA ONLINE</span></div>
+  </header>
+
+  <main class="dashboard">
+    <section class="hero-copy">
+      <p class="eyebrow">Real-time identity monitor</p>
+      <h2>See who is in the frame.</h2>
+      <p class="lede">Every detected face is evaluated locally with the trained PCA recognition model. Multiple people can be tracked at once.</p>
+    </section>
+
+    <section class="monitor-grid">
+      <div class="feed-frame">
+        <div class="feed-header">
+          <span>LIVE FEED</span>
+          <span class="feed-format">MJPEG / LOCAL</span>
+        </div>
+        <div class="feed-window">
+          <img src="{{ url_for('video_feed') }}" alt="Live camera feed with face recognition overlay">
+          <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+          <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+        </div>
+      </div>
+
+      <aside class="info-panel">
+        <div class="panel-heading">
+          <p class="eyebrow">Recognition model</p>
+          <h3>Enrolled people</h3>
+        </div>
+        <div class="people">
+          {% for person in people %}
+          <div class="person-row"><span class="person-index">0{{ loop.index }}</span><span>{{ person }}</span><span class="person-state">READY</span></div>
+          {% endfor %}
+        </div>
+        <div class="model-note">
+          <span class="note-line"></span>
+          <p>Faces below the confidence threshold appear as <strong>Unknown</strong>.</p>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>LOCAL PROCESSING</span><span class="footer-separator">/</span><span>NO VIDEO STORAGE</span>
+  </footer>
+
+</body>
+</html>
