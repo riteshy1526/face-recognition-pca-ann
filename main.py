@@ -24,7 +24,7 @@ import joblib
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
-from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
 
 from pca import PCAFaceRecognizer
 
@@ -106,13 +106,14 @@ def load_dataset(dataset_path, img_size):
     return np.array(faces), np.array(labels), label_names
 
 
-def build_classifier(c):
-    """Build a probability-producing RBF classifier for the small dataset."""
-    return SVC(
-        C=c,
-        gamma="scale",
-        kernel="rbf",
-        probability=True,
+def build_classifier(alpha):
+    """Build a probability-producing multilayer perceptron ANN."""
+    return MLPClassifier(
+        hidden_layer_sizes=(128, 64),
+        activation="relu",
+        solver="lbfgs",
+        alpha=alpha,
+        max_iter=1000,
         random_state=RANDOM_STATE,
     )
 
@@ -146,7 +147,7 @@ def augment_training_data(faces, labels):
     )
 
 
-def run_pipeline(X_train_raw, X_test_raw, y_train, y_test, k, c):
+def run_pipeline(X_train_raw, X_test_raw, y_train, y_test, k, alpha):
     """
     Fit PCA on training data only, project both sets, scale, train the ANN,
     and return test accuracy plus the fitted objects.
@@ -161,7 +162,7 @@ def run_pipeline(X_train_raw, X_test_raw, y_train, y_test, k, c):
     X_train_scaled = scaler.fit_transform(X_train_sig)
     X_test_scaled = scaler.transform(X_test_sig)
 
-    ann = build_classifier(c)
+    ann = build_classifier(alpha)
     ann.fit(X_train_scaled, y_train_augmented)
 
     predictions = ann.predict(X_test_scaled)
@@ -170,7 +171,7 @@ def run_pipeline(X_train_raw, X_test_raw, y_train, y_test, k, c):
     return accuracy, predictions, pca, scaler, ann
 
 
-def cross_validate_config(faces, labels, k, c, n_splits=5):
+def cross_validate_config(faces, labels, k, alpha, n_splits=5):
     """
     Estimate accuracy for one (K, hidden_layer_sizes, alpha) combination using
     stratified K-fold CV instead of a single train/test split -- much more
@@ -185,7 +186,7 @@ def cross_validate_config(faces, labels, k, c, n_splits=5):
         y_train, y_test = labels[train_idx], labels[test_idx]
 
         acc, _, _, _, _ = run_pipeline(
-            X_train_raw, X_test_raw, y_train, y_test, k, c
+            X_train_raw, X_test_raw, y_train, y_test, k, alpha
         )
         fold_accuracies.append(acc)
 
@@ -223,23 +224,23 @@ def main():
 
     # ---- 4. Grid-search K, hidden layer size, and regularization via CV ----
     k_values = [20, 40, 60]
-    c_values = [1, 10, 100]
+    alpha_values = [0.0001, 0.001, 0.01]
 
     print("\n--- Cross-validating ANN configurations ---")
     results = []  # list of (k, hidden, alpha, mean_cv_accuracy)
 
     for k in k_values:
-        for c in c_values:
-            mean_acc = cross_validate_config(faces, labels, k, c)
-            results.append((k, c, mean_acc))
+        for alpha in alpha_values:
+            mean_acc = cross_validate_config(faces, labels, k, alpha)
+            results.append((k, alpha, mean_acc))
             print(
-                f"K={k:>3}  C={c:<3} "
+                f"K={k:>3}  alpha={alpha:<7} "
                 f"-> CV Accuracy: {mean_acc * 100:.2f}%"
             )
 
-    best_k, best_c, best_acc = max(results, key=lambda r: r[2])
+    best_k, best_alpha, best_acc = max(results, key=lambda r: r[2])
     print(
-        f"\nBest config: K={best_k}, C={best_c} "
+        f"\nBest config: K={best_k}, alpha={best_alpha} "
         f"({best_acc * 100:.2f}% CV accuracy)"
     )
 
@@ -260,7 +261,7 @@ def main():
     #          final, honest test-set accuracy number ----
     K = best_k
     accuracy, predictions, pca, scaler, ann = run_pipeline(
-        X_train_raw, X_test_raw, y_train, y_test, K, best_c
+        X_train_raw, X_test_raw, y_train, y_test, K, best_alpha
     )
 
     print("\nPrediction sample:", predictions[:20])
@@ -271,9 +272,9 @@ def main():
     print("\n========== FINAL RESULT ==========")
     print("Total Images:", len(faces))
     print("Total Persons:", len(label_names))
-    print("Model: PCA + RBF SVM")
+    print("Model: PCA + ANN (MLPClassifier)")
     print("PCA Components (K):", K)
-    print("C (regularization):", best_c)
+    print("Alpha (regularization):", best_alpha)
     print("Training Samples:", len(X_train_raw))
     print("Testing Samples:", len(X_test_raw))
     print("Accuracy:", round(accuracy * 100, 2), "%")
