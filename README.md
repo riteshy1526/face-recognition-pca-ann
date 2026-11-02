@@ -1,80 +1,74 @@
 # Face Recognition Using PCA and ANN
 
-## Overview
-
-This project implements a Face Recognition System using Principal Component Analysis (PCA) and Artificial Neural Network (ANN). The system extracts important facial features using PCA (Eigenfaces) and classifies individuals using an ANN classifier.
-
-## Features
-
-* Face image preprocessing
-* Mean Face Calculation
-* Eigenface Generation using PCA
-* Dimensionality Reduction
-* Face Signature Extraction
-* Face Classification using ANN
-* Accuracy Evaluation
-
-## Technologies Used
-
-* Python
-* OpenCV
-* NumPy
-* Scikit-learn
-
-## Project Workflow
-
-1. Load face images from dataset
-2. Convert images to grayscale and resize
-3. Generate face database
-4. Calculate Mean Face
-5. Create Delta Matrix
-6. Compute Covariance Matrix
-7. Calculate Eigenvalues and Eigenvectors
-8. Generate Eigenfaces
-9. Extract PCA Features (Face Signatures)
-10. Train ANN Classifier
-11. Evaluate Recognition Accuracy
-
-## Dataset
-
-The dataset contains images of four individuals:
-
-* Alok
-* Nitin
-* Ritesh
-* Utkarsh
-
-Total Images: 114
+A face recognition system built from scratch with **Principal Component Analysis (Eigenfaces)** for feature extraction and an **Artificial Neural Network (MLPClassifier)** for classification. It includes a training pipeline, a live webcam recognizer, and a small Flask web app.
 
 ## Results
 
-* PCA Components (K): 70
-* Training Samples: 68
-* Testing Samples: 46
-* Classification Model: ANN (MLPClassifier)
-* Accuracy Achieved: 39.13%
+| Setting | Classes | Test accuracy |
+|---|---|---|
+| 40-class face dataset (i-STUDIO AI internship) | 40 | **91%** |
 
-## Installation
+The `dataset/` folder in this repository is a small demo set (4 people: Alok, Nitin, Ritesh, Utkarsh, 114 images) so the project can be run and tested quickly. Accuracy on this tiny set is much lower than on the 40-class dataset because there are very few images per person; add more images per person to improve it.
 
-```bash
-pip install numpy opencv-python scikit-learn
+## Features
+
+- Face detection and cropping with an OpenCV Haar cascade, plus lighting equalization
+- Train/test split done **before** fitting PCA, so there is no data leakage
+- PCA implemented step by step: mean face, delta matrix, covariance matrix, eigenvalues/eigenvectors, eigenfaces, face signatures
+- Cross-validation over the number of PCA components (K), hidden-layer size and regularization to pick the best ANN configuration
+- Live webcam recognition with an "Unknown" label when confidence is below 0.35
+- Flask web app that streams the webcam feed with recognition boxes in the browser
+- Unit tests for the label-mapping logic
+
+## Tech Stack
+
+Python, OpenCV, NumPy, Scikit-learn, Matplotlib, Joblib, Flask
+
+## Project Structure
+
+```text
+main.py                 Train: load data, PCA, ANN tuning, evaluate, save model
+pca.py                  PCA / Eigenfaces implementation
+ann.py                  ANN helpers
+live_recognition.py     Live webcam recognition (OpenCV window)
+app.py                  Flask web app for live recognition in the browser
+utils.py                Shared helpers
+tests/                  Unit tests
+dataset/<person>/*.jpg  Training images, one folder per person
+plots/                  Generated plots (mean face, eigenfaces, etc.)
+Report.pdf              Project report
 ```
 
-## Run Project
+## Setup
 
 ```bash
-python main.py
+pip install -r requirements.txt
 ```
+
+## Usage
+
+1. Put face images in `dataset/<person_name>/` (one folder per person).
+2. Train the model (saves `face_model.pkl`):
+
+   ```bash
+   python main.py
+   ```
+
+3. Run live recognition:
+
+   ```bash
+   python live_recognition.py     # OpenCV window, press q to quit
+   python app.py                  # browser app at http://127.0.0.1:5000
+   ```
+
+> The web app uses the webcam of the machine it runs on and has no authentication, so it is meant for local use.
 
 ## Author
 
-Ritesh Yadav
-
-B.Tech CSE (AI & ML)
+Ritesh Kumar Yadav, B.Tech CSE (AI & ML)
 
 ## Future Improvements
 
-* Real-time face recognition using webcam
-* Face detection before recognition
-* Deep Learning based face embeddings
-* Improved dataset and model accuracy
+- Deep learning based face embeddings
+- Larger and more varied dataset
+- Multi-camera / multi-user web deployment
